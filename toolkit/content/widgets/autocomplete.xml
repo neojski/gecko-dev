@@ -1199,13 +1199,11 @@ extends="chrome://global/content/bindings/popup.xml#popup">
     <content>
       <xul:hbox align="center" class="ac-title-box">
         <xul:image xbl:inherits="src=image" class="ac-site-icon"/>
-        <xul:hbox anonid="title-box" class="ac-title" flex="1"
-                  onunderflow="_doUnderflow('_title');"
-                  onoverflow="_doOverflow('_title');">
-          <xul:description anonid="title" class="ac-normal-text ac-comment" xbl:inherits="selected"/>
+        <xul:hbox anonid="title-box" class="ac-title" onoverflow="console.log(this.width)">
+          <html:div style="background:blue">
+            <html:div style="background:rgba(0,0,0,.5); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:50%" anonid="title" class="ac-normal-text ac-comment" xbl:inherits="selected"/>
+          </html:div>
         </xul:hbox>
-        <xul:label anonid="title-overflow-ellipsis" xbl:inherits="selected"
-                   class="ac-ellipsis-after ac-comment"/>
         <xul:hbox anonid="extra-box" class="ac-extra" align="center" hidden="true">
           <xul:image class="ac-result-type-tag"/>
           <xul:label class="ac-normal-text ac-comment" xbl:inherits="selected" value=":"/>
@@ -1216,16 +1214,12 @@ extends="chrome://global/content/bindings/popup.xml#popup">
       <xul:hbox align="center" class="ac-url-box">
         <xul:spacer class="ac-site-icon"/>
         <xul:image class="ac-action-icon"/>
-        <xul:hbox anonid="url-box" class="ac-url" flex="1"
-                  onunderflow="_doUnderflow('_url');"
-                  onoverflow="_doOverflow('_url');">
+        <xul:hbox anonid="url-box" class="ac-url" flex="1">
           <xul:description anonid="url" class="ac-normal-text ac-url-text"
                            xbl:inherits="selected type"/>
           <xul:description anonid="action" class="ac-normal-text ac-action-text"
                            xbl:inherits="selected type"/>
         </xul:hbox>
-        <xul:label anonid="url-overflow-ellipsis" xbl:inherits="selected"
-                   class="ac-ellipsis-after ac-url-text"/>
         <xul:spacer class="ac-type-icon"/>
       </xul:hbox>
     </content>
@@ -1241,12 +1235,6 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             } catch (ex) {
               // Do nothing.. we already have a default
             }
-
-            this._urlOverflowEllipsis = document.getAnonymousElementByAttribute(this, "anonid", "url-overflow-ellipsis");
-            this._titleOverflowEllipsis = document.getAnonymousElementByAttribute(this, "anonid", "title-overflow-ellipsis");
-
-            this._urlOverflowEllipsis.value = ellipsis;
-            this._titleOverflowEllipsis.value = ellipsis;
 
             this._typeImage = document.getAnonymousElementByAttribute(this, "anonid", "type-image");
 
@@ -1437,12 +1425,6 @@ extends="chrome://global/content/bindings/popup.xml#popup">
 
           this.removeAttribute("actiontype");
 
-          // The ellipses are hidden via their visibility so that they always
-          // take up space and don't pop in on top of text when shown.  For
-          // keyword searches, however, the title ellipsis should not take up
-          // space when hidden.  Setting the hidden property accomplishes that.
-          this._titleOverflowEllipsis.hidden = false;
-
           // If the type includes an action, set up the item appropriately.
           var types = type.split(/\s+/);
           var actionIndex = types.indexOf("action");
@@ -1502,9 +1484,6 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             this._extraBox.pack = "start";
             this._titleBox.flex = 0;
 
-            // Hide the ellipsis so it doesn't take up space.
-            this._titleOverflowEllipsis.hidden = true;
-
             // Put the parameters next to the title if we have any
             let search = this.getAttribute("text");
             let params = "";
@@ -1541,76 +1520,9 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             // The search engine name, when present, is not emphasized.
             this._setUpDescription(this._url, desc, true);
           }
-
-          // Set up overflow on a timeout because the contents of the box
-          // might not have a width yet even though we just changed them
-          setTimeout(this._setUpOverflow, 0, this._titleBox, this._titleOverflowEllipsis);
-          setTimeout(this._setUpOverflow, 0, this._urlBox, this._urlOverflowEllipsis);
           ]]>
         </body>
       </method>
-
-      <method name="_setUpOverflow">
-        <parameter name="aParentBox"/>
-        <parameter name="aEllipsis"/>
-        <body>
-          <![CDATA[
-          // Hide the ellipsis incase there's just enough to not underflow
-          aEllipsis.style.visibility = "hidden";
-
-          // Start with the parent's width and subtract off its children
-          let tooltip = [];
-          let children = aParentBox.childNodes;
-          let widthDiff = aParentBox.boxObject.width;
-
-          for (let i = 0; i < children.length; i++) {
-            // Only consider a child if it actually takes up space
-            let childWidth = children[i].boxObject.width;
-            if (childWidth > 0) {
-              // Subtract a little less to account for subpixel rounding
-              widthDiff -= childWidth - .5;
-
-              // Add to the tooltip if it's not hidden and has text
-              let childText = children[i].textContent;
-              if (childText)
-                tooltip.push(childText);
-            }
-          }
-
-          // If the children take up more space than the parent.. overflow!
-          if (widthDiff < 0) {
-            // Re-show the ellipsis now that we know it's needed
-            aEllipsis.style.visibility = "visible";
-
-            // Separate text components with a ndash --
-            aParentBox.tooltipText = tooltip.join(" \u2013 ");
-          }
-          ]]>
-        </body>
-      </method>
-
-      <method name="_doUnderflow">
-        <parameter name="aName"/>
-        <body>
-          <![CDATA[
-          // Hide the ellipsis right when we know we're underflowing instead of
-          // waiting for the timeout to trigger the _setUpOverflow calculations
-          this[aName + "Box"].tooltipText = "";
-          this[aName + "OverflowEllipsis"].style.visibility = "hidden";
-          ]]>
-        </body>
-      </method>
-
-      <method name="_doOverflow">
-        <parameter name="aName"/>
-        <body>
-          <![CDATA[
-          this._setUpOverflow(this[aName + "Box"],
-                              this[aName + "OverflowEllipsis"]);
-          ]]>
-        </body>
-      </method>
-
     </implementation>
   </binding>
 
