@@ -1197,31 +1197,36 @@ extends="chrome://global/content/bindings/popup.xml#popup">
 
   <binding id="autocomplete-richlistitem" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
     <content>
-      <xul:hbox align="center" class="ac-title-box">
-        <xul:image xbl:inherits="src=image" class="ac-site-icon"/>
-        <xul:hbox anonid="title-box" class="ac-title" onoverflow="console.log(this.width)">
-          <html:div style="background:blue">
-            <html:div style="background:rgba(0,0,0,.5); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:50%" anonid="title" class="ac-normal-text ac-comment" xbl:inherits="selected"/>
-          </html:div>
+      <html:div>
+      <!--
+
+    How to achieve this without specifying width of this div?!
+    
+    -->
+        <html:div align="center" class="ac-title-box" style="width:500px; display:flex" anonid="xxx">
+          <xul:image xbl:inherits="src=image" class="ac-site-icon" style="flex-shrink:0"/>
+          <xul:hbox anonid="title-box" class="ac-title">
+            <html:div style="background:rgba(0,0,0,.5); white-space:nowrap; overflow:hidden; text-overflow:ellipsis" anonid="title" class="ac-normal-text ac-comment" xbl:inherits="selected"/>
+          </xul:hbox>
+          <xul:hbox anonid="extra-box" class="ac-extra" align="center" hidden="true" style="flex-shrink:0">
+            <xul:image class="ac-result-type-tag"/>
+            <xul:label class="ac-normal-text ac-comment" xbl:inherits="selected" value=":"/>
+            <xul:description anonid="extra" class="ac-normal-text ac-comment" xbl:inherits="selected"/>
+          </xul:hbox>
+          <xul:image anonid="type-image" class="ac-type-icon" style="flex-shrink:0"/>
+        </html:div>
+        <xul:hbox align="center" class="ac-url-box">
+          <xul:spacer class="ac-site-icon"/>
+          <xul:image class="ac-action-icon"/>
+          <xul:hbox anonid="url-box" class="ac-url" flex="1">
+            <xul:description anonid="url" class="ac-normal-text ac-url-text"
+                             xbl:inherits="selected type"/>
+            <xul:description anonid="action" class="ac-normal-text ac-action-text"
+                             xbl:inherits="selected type"/>
+          </xul:hbox>
+          <xul:spacer class="ac-type-icon"/>
         </xul:hbox>
-        <xul:hbox anonid="extra-box" class="ac-extra" align="center" hidden="true">
-          <xul:image class="ac-result-type-tag"/>
-          <xul:label class="ac-normal-text ac-comment" xbl:inherits="selected" value=":"/>
-          <xul:description anonid="extra" class="ac-normal-text ac-comment" xbl:inherits="selected"/>
-        </xul:hbox>
-        <xul:image anonid="type-image" class="ac-type-icon"/>
-      </xul:hbox>
-      <xul:hbox align="center" class="ac-url-box">
-        <xul:spacer class="ac-site-icon"/>
-        <xul:image class="ac-action-icon"/>
-        <xul:hbox anonid="url-box" class="ac-url" flex="1">
-          <xul:description anonid="url" class="ac-normal-text ac-url-text"
-                           xbl:inherits="selected type"/>
-          <xul:description anonid="action" class="ac-normal-text ac-action-text"
-                           xbl:inherits="selected type"/>
-        </xul:hbox>
-        <xul:spacer class="ac-type-icon"/>
-      </xul:hbox>
+      </html:div>
     </content>
     <implementation implements="nsIDOMXULSelectControlItemElement">
       <constructor>
@@ -1235,6 +1240,8 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             } catch (ex) {
               // Do nothing.. we already have a default
             }
+
+            this._xxx = document.getAnonymousElementByAttribute(this, "anonid", "xxx");
 
             this._typeImage = document.getAnonymousElementByAttribute(this, "anonid", "type-image");
 
