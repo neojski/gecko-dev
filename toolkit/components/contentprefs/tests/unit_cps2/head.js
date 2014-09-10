@@ -15,7 +15,7 @@ var next;
   do_get_profile();
 })();
 
-function runAsyncTests(tests) {
+function runAsyncTests(tests, dontResetBefore = false) {
   do_test_pending();
 
   cps = Cc["@mozilla.org/content-pref/service;1"].
@@ -76,21 +76,33 @@ function runAsyncTests(tests) {
   });
 
   // reset() ends up calling asyncRunner.next(), starting the tests.
-  reset();
+  if (dontResetBefore) {
+    next();
+  } else {
+    reset();
+  }
 }
 
-function makeCallback(callbacks) {
+function makeCallback(callbacks, success = null) {
   callbacks = callbacks || {};
-  ["handleResult", "handleError"].forEach(function (meth) {
-    if (!callbacks[meth])
-      callbacks[meth] = function () {
-        do_throw(meth + " shouldn't be called.");
-      };
-  });
+  if (!callbacks.handleError) {
+    callbacks.handleError = function (error) {
+      do_throw("handleError was called with result: " + error.result + " and message: " + error.message);
+    };
+  }
+  if (!callbacks.handleResult) {
+    callbacks.handleResult = function() {
+      do_throw("handleResult call was not expected");
+    };
+  }
   if (!callbacks.handleCompletion)
     callbacks.handleCompletion = function (reason) {
       do_check_eq(reason, Ci.nsIContentPrefCallback2.COMPLETE_OK);
-      next();
+      if (success) {
+        success();
+      } else {
+        next();
+      }
     };
   return callbacks;
 }
@@ -115,6 +127,60 @@ function sendMessage(msg, callback) {
 
 function reset() {
   sendMessage("reset", next);
+}
+
+function setWithDate(group, name, val, timestamp, context) {
+  function updateDate() {
+    let db = sendMessage("db");
+    let stmt = db.createAsyncStatement(`
+      UPDATE prefs SET timestamp = :timestamp
+      WHERE
+        settingID = (SELECT id FROM settings WHERE name = :name)
+        AND groupID = (SELECT id FROM groups WHERE name = :group)
+    `);
+    stmt.params.timestamp = timestamp;
+    stmt.params.name = name;
+    stmt.params.group = group;
+
+    stmt.executeAsync({
+      handleCompletion: function (reason) {
+        next();
+      },
+      handleError: function (err) {
+        do_throw(err);
+      }
+    });
+    stmt.finalize();
+  }
+
+  cps.set(group, name, val, context, makeCallback(null, updateDate));
+}
+
+function getDate(group, name, context) {
+  let db = sendMessage("db");
+  let stmt = db.createAsyncStatement(`
+    SELECT timestamp FROM prefs
+    WHERE
+      settingID = (SELECT id FROM settings WHERE name = :name)
+      AND groupID = (SELECT id FROM groups WHERE name = :group)
+  `);
+  stmt.params.name = name;
+  stmt.params.group = group;
+
+  let res = '';
+  stmt.executeAsync({
+    handleResult: function (results) {
+      let row = results.getNextRow();
+      res = row.getResultByName('timestamp');
+    },
+    handleCompletion: function (reason) {
+      next(res);
+    },
+    handleError: function (err) {
+      do_throw(err);
+    }
+  });
+  stmt.finalize();
 }
 
 function set(group, name, val, context) {
@@ -221,11 +287,11 @@ function getCachedOKEx(methodName, args, expectedPref, strict) {
 }
 
 function arraysOfArraysOK(actual, expected, cmp) {
-  cmp = cmp || function (a, b) do_check_eq(a, b);
-  do_check_eq(actual.length, expected.length);
+  cmp = cmp || function (a, b) equal(a, b);
+  equal(actual.length, expected.length, "Length of outer arrays should be the same.");
   actual.forEach(function (actualChildArr, i) {
     let expectedChildArr = expected[i];
-    do_check_eq(actualChildArr.length, expectedChildArr.length);
+    equal(actualChildArr.length, expectedChildArr.length, "Length of inner arrays should be the same.");
     actualChildArr.forEach(function (actualElt, j) {
       let expectedElt = expectedChildArr[j];
       cmp(actualElt, expectedElt);
@@ -318,6 +384,11 @@ function on(event, names, dontRemove) {
       names.forEach(function (n) cps.removeObserverForName(n, observers[n]));
     next(args);
   });
+}
+
+function schemaVersionIs(expectedVersion) {
+  let db = sendMessage('db');
+  equal(db.schemaVersion, expectedVersion);
 }
 
 function wait() {
