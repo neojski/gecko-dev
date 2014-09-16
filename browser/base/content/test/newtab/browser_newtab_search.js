@@ -4,11 +4,38 @@
 // See browser/components/search/test/browser_*_behavior.js for tests of actual
 // searches.
 
-const ENGINE_NO_LOGO = "searchEngineNoLogo.xml";
-const ENGINE_1X_LOGO = "searchEngine1xLogo.xml";
-const ENGINE_2X_LOGO = "searchEngine2xLogo.xml";
-const ENGINE_1X_2X_LOGO = "searchEngine1x2xLogo.xml";
-const ENGINE_SUGGESTIONS = "searchSuggestionEngine.xml";
+const ENGINE_NO_LOGO = {
+  name: "searchEngineNoLogo.xml",
+  numLogos: 0,
+};
+const ENGINE_FAVICON = {
+  name: "searchEngineFavicon.xml",
+  logoPrefix1x: "data:image/png;base64,AAABAAIAICAAAAEAIACoEAAAJgAAABAQAAABACAAaAQAAM4QAAAoAAAAIAAAAEAAAAABACAAAAAAAAAQAAATCwAAEwsAAAAAAAAAAAAA/wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD",
+  logoPrefix2x: "data:image/png;base64,AAABAAIAICAAAAEAIACoEAAAJgAAABAQAAABACAAaAQAAM4QAAAoAAAAIAAAAEAAAAABACAAAAAAAAAQAAATCwAAEwsAAAAAAAAAAAAA/wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD",
+  numLogos: 1,
+};
+const ENGINE_1X_LOGO = {
+  name: "searchEngine1xLogo.xml",
+  logoPrefix1x: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEEAAAAaCAIAAABn3KYmAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gkTADEwS9h64QAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAAL0lEQVRYw+3PAREAAAQEsKd/Z3I4W4PV5LyOg4ODg4ODg4ODg4ODg4ODg4PD78MC7cwBM02qquMAAAAASUVORK5CYII=",
+  logoPrefix2x: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEEAAAAaCAIAAABn3KYmAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gkTADEwS9h64QAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAAL0lEQVRYw+3PAREAAAQEsKd/Z3I4W4PV5LyOg4ODg4ODg4ODg4ODg4ODg4PD78MC7cwBM02qquMAAAAASUVORK5CYII=",
+  numLogos: 1,
+};
+const ENGINE_2X_LOGO = {
+  name: "searchEngine2xLogo.xml",
+  logoPrefix1x: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIIAAAA0CAIAAADJ8nfCAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gkTADMURe38sgAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAAYklEQVR42u3RQQ0AAAjEsAP/nsEECZ9OwlrJRN+1BRiEAYMwYBAGDMKAQRgwCAMGYcAgDBiEAYMwYBAGDMKAQRgwCAMGYcAgDMKAQRgwCAMGYcAgDBiEAYMwYBAGDMKAQXctkIQBZ/1YP3YAAAAASUVORK5CYII=",
+  logoPrefix2x: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIIAAAA0CAIAAADJ8nfCAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gkTADMURe38sgAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAAYklEQVR42u3RQQ0AAAjEsAP/nsEECZ9OwlrJRN+1BRiEAYMwYBAGDMKAQRgwCAMGYcAgDBiEAYMwYBAGDMKAQRgwCAMGYcAgDMKAQRgwCAMGYcAgDBiEAYMwYBAGDMKAQXctkIQBZ/1YP3YAAAAASUVORK5CYII=",
+  numLogos: 1,
+};
+const ENGINE_1X_2X_LOGO = {
+  name: "searchEngine1x2xLogo.xml",
+  logoPrefix1x: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEEAAAAaCAIAAABn3KYmAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gkTADIGr0+8uwAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAAL0lEQVRYw+3PAREAAAQEsKd/Z3I4W4NVJtd14uDg4ODg4ODg4ODg4ODg4ODg8Pqw7M0BM+n9I0oAAAAASUVORK5CYII=",
+  logoPrefix2x: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIIAAAA0CAIAAADJ8nfCAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gkTADMoaoKANQAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAAYklEQVR42u3RQQ0AAAjEMMC/58MECZ9OwtqVlL4bCzAIAwZhwCAMGIQBgzBgEAYMwoBBGDAIAwZhwCAMGIQBgzBgEAYMwoBBGIQBgzBgEAYMwoBBGDAIAwZhwCAMGIQBg+5ar7sCZiri9VUAAAAASUVORK5CYII=",
+  numLogos: 2,
+};
+const ENGINE_SUGGESTIONS = {
+  name: "searchSuggestionEngine.xml",
+  numLogos: 0,
+};
 
 const SERVICE_EVENT_NAME = "ContentSearchService";
 
@@ -46,59 +73,53 @@ function runTests() {
 
   // Add the engine without any logos and switch to it.
   let noLogoEngine = null;
-  yield promiseNewSearchEngine(ENGINE_NO_LOGO, 0).then(engine => {
+  yield promiseNewSearchEngine(ENGINE_NO_LOGO).then(engine => {
     noLogoEngine = engine;
     TestRunner.next();
   });
-  ok(!noLogoEngine.getIconURLBySize(...LOGO_1X_DPI_SIZE),
-     "Sanity check: engine should not have 1x logo");
-  ok(!noLogoEngine.getIconURLBySize(...LOGO_2X_DPI_SIZE),
-     "Sanity check: engine should not have 2x logo");
   Services.search.currentEngine = noLogoEngine;
   yield promiseSearchEvents(["CurrentEngine"]).then(TestRunner.next);
-  yield checkCurrentEngine(ENGINE_NO_LOGO, false, false);
+  yield checkCurrentEngine(ENGINE_NO_LOGO);
+
+  // Add the engine with favicon and switch to it.
+  let faviconEngine = null;
+  yield promiseNewSearchEngine(ENGINE_FAVICON).then(engine => {
+    faviconEngine = engine;
+    TestRunner.next();
+  });
+  Services.search.currentEngine = faviconEngine;
+  yield promiseSearchEvents(["CurrentEngine"]).then(TestRunner.next);
+  yield checkCurrentEngine(ENGINE_FAVICON);
 
   // Add the engine with a 1x-DPI logo and switch to it.
   let logo1xEngine = null;
-  yield promiseNewSearchEngine(ENGINE_1X_LOGO, 1).then(engine => {
+  yield promiseNewSearchEngine(ENGINE_1X_LOGO).then(engine => {
     logo1xEngine = engine;
     TestRunner.next();
   });
-  ok(!!logo1xEngine.getIconURLBySize(...LOGO_1X_DPI_SIZE),
-     "Sanity check: engine should have 1x logo");
-  ok(!logo1xEngine.getIconURLBySize(...LOGO_2X_DPI_SIZE),
-     "Sanity check: engine should not have 2x logo");
   Services.search.currentEngine = logo1xEngine;
   yield promiseSearchEvents(["CurrentEngine"]).then(TestRunner.next);
-  yield checkCurrentEngine(ENGINE_1X_LOGO, true, false);
+  yield checkCurrentEngine(ENGINE_1X_LOGO);
 
   // Add the engine with a 2x-DPI logo and switch to it.
   let logo2xEngine = null;
-  yield promiseNewSearchEngine(ENGINE_2X_LOGO, 1).then(engine => {
+  yield promiseNewSearchEngine(ENGINE_2X_LOGO).then(engine => {
     logo2xEngine = engine;
     TestRunner.next();
   });
-  ok(!logo2xEngine.getIconURLBySize(...LOGO_1X_DPI_SIZE),
-     "Sanity check: engine should not have 1x logo");
-  ok(!!logo2xEngine.getIconURLBySize(...LOGO_2X_DPI_SIZE),
-     "Sanity check: engine should have 2x logo");
   Services.search.currentEngine = logo2xEngine;
   yield promiseSearchEvents(["CurrentEngine"]).then(TestRunner.next);
-  yield checkCurrentEngine(ENGINE_2X_LOGO, false, true);
+  yield checkCurrentEngine(ENGINE_2X_LOGO);
 
   // Add the engine with 1x- and 2x-DPI logos and switch to it.
   let logo1x2xEngine = null;
-  yield promiseNewSearchEngine(ENGINE_1X_2X_LOGO, 2).then(engine => {
+  yield promiseNewSearchEngine(ENGINE_1X_2X_LOGO).then(engine => {
     logo1x2xEngine = engine;
     TestRunner.next();
   });
-  ok(!!logo1x2xEngine.getIconURLBySize(...LOGO_1X_DPI_SIZE),
-     "Sanity check: engine should have 1x logo");
-  ok(!!logo1x2xEngine.getIconURLBySize(...LOGO_2X_DPI_SIZE),
-     "Sanity check: engine should have 2x logo");
   Services.search.currentEngine = logo1x2xEngine;
   yield promiseSearchEvents(["CurrentEngine"]).then(TestRunner.next);
-  yield checkCurrentEngine(ENGINE_1X_2X_LOGO, true, true);
+  yield checkCurrentEngine(ENGINE_1X_2X_LOGO);
 
   // Click the logo to open the search panel.
   yield Promise.all([
@@ -121,12 +142,12 @@ function runTests() {
     promiseClick(noLogoBox),
   ]).then(TestRunner.next);
 
-  yield checkCurrentEngine(ENGINE_NO_LOGO, false, false);
+  yield checkCurrentEngine(ENGINE_NO_LOGO);
 
   // Switch back to the 1x-and-2x logo engine.
   Services.search.currentEngine = logo1x2xEngine;
   yield promiseSearchEvents(["CurrentEngine"]).then(TestRunner.next);
-  yield checkCurrentEngine(ENGINE_1X_2X_LOGO, true, true);
+  yield checkCurrentEngine(ENGINE_1X_2X_LOGO);
 
   // Open the panel again.
   yield Promise.all([
@@ -144,13 +165,13 @@ function runTests() {
 
   // Add the engine that provides search suggestions and switch to it.
   let suggestionEngine = null;
-  yield promiseNewSearchEngine(ENGINE_SUGGESTIONS, 0).then(engine => {
+  yield promiseNewSearchEngine(ENGINE_SUGGESTIONS).then(engine => {
     suggestionEngine = engine;
     TestRunner.next();
   });
   Services.search.currentEngine = suggestionEngine;
   yield promiseSearchEvents(["CurrentEngine"]).then(TestRunner.next);
-  yield checkCurrentEngine(ENGINE_SUGGESTIONS, false, false);
+  yield checkCurrentEngine(ENGINE_SUGGESTIONS);
 
   // Avoid intermittent failures.
   gSearch()._suggestionController.remoteTimeout = 5000;
@@ -270,7 +291,7 @@ function promiseSearchEvents(events) {
   return Promise.all(events.map(e => e.deferred.promise));
 }
 
-function promiseNewSearchEngine(basename, numLogos) {
+function promiseNewSearchEngine({name: basename, numLogos}) {
   info("Waiting for engine to be added: " + basename);
 
   // Wait for the search events triggered by adding the new engine.
@@ -297,19 +318,40 @@ function promiseNewSearchEngine(basename, numLogos) {
     },
   });
 
-  // Make a new promise that wraps the previous promises.  The only point of
-  // this is to pass the new engine to the yielder via deferred.resolve(),
-  // which is a little nicer than passing an array whose first element is the
-  // new engine.
-  let deferred = Promise.defer();
-  Promise.all([addDeferred.promise, eventPromise]).then(values => {
-    let newEngine = values[0];
-    deferred.resolve(newEngine);
-  }, () => deferred.reject());
-  return deferred.promise;
+  return Promise.all([addDeferred.promise, eventPromise]).then(([newEngine, _]) => {
+    return newEngine;
+  });
 }
 
-function checkCurrentEngine(basename, has1xLogo, has2xLogo) {
+function objectURLToBlob(url) {
+  return new Promise(function (resolve, reject) {
+    let xhr = new XMLHttpRequest();
+    xhr.open("get", url, true);
+    xhr.responseType = "blob";
+    xhr.overrideMimeType("image/png");
+    xhr.onload = function(e) {
+      if (this.status == 200) {
+        return resolve (this.response);
+      }
+      reject("Failed to get logo, xhr returned status: " + this.status);
+    };
+    xhr.onerror = reject;
+    xhr.send();
+  });
+}
+
+function blobToBase64(blob) {
+  return new Promise(function (resolve, reject) {
+    var reader = new FileReader();
+    reader.onload = function() {
+      resolve(reader.result);
+    }
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+function checkCurrentEngine({name: basename, logoPrefix1x, logoPrefix2x}) {
   let engine = Services.search.currentEngine;
   ok(engine.name.contains(basename),
      "Sanity check: current engine: engine.name=" + engine.name +
@@ -319,58 +361,46 @@ function checkCurrentEngine(basename, has1xLogo, has2xLogo) {
   is(gSearch().currentEngineName, engine.name,
      "currentEngineName: " + engine.name);
 
-  // search bar logo
-  let logoURI = null;
-  if (window.devicePixelRatio == 2) {
-    if (has2xLogo) {
-      logoURI = engine.getIconURLBySize(...LOGO_2X_DPI_SIZE);
-      ok(!!logoURI, "Sanity check: engine should have 2x logo");
-    }
+  let expectedLogoPrefix = window.devicePixelRatio >= 2 ? logoPrefix2x : logoPrefix1x;
+
+  // Check that the right logo is set.
+  let logo = logoImg();
+  if (expectedLogoPrefix) {
+    let objectURL = logo.style.backgroundImage.match(/^url\("([^"]*)"\)$/)[1];
+    ok(objectURL, "ObjectURL should be there.");
+    objectURLToBlob(objectURL).then(blobToBase64).then(function(res) {
+      ok(res.startsWith(expectedLogoPrefix), "Checking image prefix.");
+      checkSelectedAttribute();
+    }, function (reason) {
+      ok(false, "Logo check failed with: " + reason);
+    });
   }
   else {
-    if (has1xLogo) {
-      logoURI = engine.getIconURLBySize(...LOGO_1X_DPI_SIZE);
-      ok(!!logoURI, "Sanity check: engine should have 1x logo");
-    }
-    else if (has2xLogo) {
-      logoURI = engine.getIconURLBySize(...LOGO_2X_DPI_SIZE);
-      ok(!!logoURI, "Sanity check: engine should have 2x logo");
-    }
-  }
-  let logo = logoImg();
-  is(logo.hidden, !logoURI,
-     "Logo should be visible iff engine has a logo: " + engine.name);
-  if (logoURI) {
-    // The URLs of blobs created with the same ArrayBuffer are different, so
-    // just check that the URI is a blob URI.
-    ok(/^url\("blob:/.test(logo.style.backgroundImage), "Logo URI"); //"
-  }
-
-  if (logo.hidden) {
     executeSoon(TestRunner.next);
-    return;
   }
 
-  // "selected" attributes of engines in the panel
-  let panel = searchPanel();
-  promisePanelShown(panel).then(() => {
-    panel.hidePopup();
-    for (let engineBox of panel.childNodes) {
-      let engineName = engineBox.getAttribute("engine");
-      if (engineName == engine.name) {
-        is(engineBox.getAttribute("selected"), "true",
-           "Engine box's selected attribute should be true for " +
-           "selected engine: " + engineName);
+  function checkSelectedAttribute() {
+    // "selected" attributes of engines in the panel
+    let panel = searchPanel();
+    promisePanelShown(panel).then(() => {
+      panel.hidePopup();
+      for (let engineBox of panel.childNodes) {
+        let engineName = engineBox.getAttribute("engine");
+        if (engineName == engine.name) {
+          is(engineBox.getAttribute("selected"), "true",
+             "Engine box's selected attribute should be true for " +
+             "selected engine: " + engineName);
+        }
+        else {
+          ok(!engineBox.hasAttribute("selected"),
+             "Engine box's selected attribute should be absent for " +
+             "non-selected engine: " + engineName);
+        }
       }
-      else {
-        ok(!engineBox.hasAttribute("selected"),
-           "Engine box's selected attribute should be absent for " +
-           "non-selected engine: " + engineName);
-      }
-    }
-    TestRunner.next();
-  });
-  panel.openPopup(logo);
+      TestRunner.next();
+    });
+    panel.openPopup(logo);
+  }
 }
 
 function promisePanelShown(panel) {
