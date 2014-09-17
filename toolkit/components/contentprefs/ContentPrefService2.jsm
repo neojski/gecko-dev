@@ -525,7 +525,6 @@ ContentPrefService2.prototype = {
     });
   },
 
-  // Removes all domains since some specified date.
   _removeAllDomainsSince: function CPS2__removeAllDomainsSince(since, context, callback) {
     checkCallbackArg(callback, false);
 
