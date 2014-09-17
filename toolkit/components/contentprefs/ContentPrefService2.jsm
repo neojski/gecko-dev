@@ -526,8 +526,6 @@ ContentPrefService2.prototype = {
   },
 
   // Removes all domains since some specified date.
-  // If since !== null removes domains with timestamp >= since (and timestamp not null).
-  // Otherwise removes all domains.
   _removeAllDomainsSince: function CPS2__removeAllDomainsSince(since, context, callback) {
     checkCallbackArg(callback, false);
 
@@ -539,27 +537,21 @@ ContentPrefService2.prototype = {
     let stmts = [];
 
     // Get prefs that are about to be removed to notify about their removal.
-    // Please note that (null >= number) evaluates to null.
     let stmt = this._stmt(`
       SELECT groups.name AS grp, settings.name AS name
       FROM prefs
       JOIN settings ON settings.id = prefs.settingID
       JOIN groups ON groups.id = prefs.groupID
-      ${since !== null ? ' WHERE timestamp >= :since' : ''}
+      WHERE timestamp >= :since
     `);
-    if (since !== null) {
-      stmt.params.since = since;
-    }
+    stmt.params.since = since;
     stmts.push(stmt);
 
     // Do the actual remove.
     stmt = this._stmt(`
-      DELETE FROM prefs WHERE groupID NOTNULL
-      ${since !== null ? ' AND timestamp >= :since' : ''}
+      DELETE FROM prefs WHERE groupID NOTNULL AND timestamp >= :since
     `);
-    if (since !== null) {
-      stmt.params.since = since;
-    }
+    stmt.params.since = since;
     stmts.push(stmt);
 
     // Cleanup no longer used values.
@@ -600,7 +592,7 @@ ContentPrefService2.prototype = {
   },
 
   removeAllDomains: function CPS2_removeAllDomains(context, callback) {
-    this._removeAllDomainsSince(null, context, callback);
+    this._removeAllDomainsSince(0, context, callback);
   },
 
   removeByName: function CPS2_removeByName(name, context, callback) {

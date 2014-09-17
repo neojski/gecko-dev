@@ -1012,7 +1012,7 @@ ContentPrefService.prototype = {
                    groupID      INTEGER REFERENCES groups(id), \
                    settingID    INTEGER NOT NULL REFERENCES settings(id), \
                    value        BLOB, \
-                   timestamp    INTEGER" // Storage in seconds, API in ms. 0 for migrated values.
+                   timestamp    INTEGER NOT NULL DEFAULT 0" // Storage in seconds, API in ms. 0 for migrated values.
     },
     indices: {
       groups_idx: {
@@ -1213,7 +1213,7 @@ ContentPrefService.prototype = {
   },
 
   _dbMigrate3To4: function ContentPrefService__dbMigrate3To4(aDBConnection) {
-    aDBConnection.executeSimpleSQL("ALTER TABLE prefs ADD COLUMN timestamp INTEGER");
+    aDBConnection.executeSimpleSQL("ALTER TABLE prefs ADD COLUMN timestamp INTEGER NOT NULL DEFAULT 0");
     // To modify prefs_idx drop it and create again.
     aDBConnection.executeSimpleSQL("DROP INDEX IF EXISTS prefs_idx");
     this._dbCreateIndices(aDBConnection);

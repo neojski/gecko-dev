@@ -138,7 +138,7 @@ function setWithDate(group, name, val, timestamp, context) {
         settingID = (SELECT id FROM settings WHERE name = :name)
         AND groupID = (SELECT id FROM groups WHERE name = :group)
     `);
-    stmt.params.timestamp = timestamp;
+    stmt.params.timestamp = timestamp / 1000;
     stmt.params.name = name;
     stmt.params.group = group;
 
@@ -174,7 +174,7 @@ function getDate(group, name, context) {
       res = row.getResultByName('timestamp');
     },
     handleCompletion: function (reason) {
-      next(res);
+      next(res * 1000);
     },
     handleError: function (err) {
       do_throw(err);
@@ -286,16 +286,21 @@ function getCachedOKEx(methodName, args, expectedPref, strict) {
     do_check_true(actualPref === null);
 }
 
-function arraysOfArraysOK(actual, expected, cmp) {
-  cmp = cmp || function (a, b) equal(a, b);
-  equal(actual.length, expected.length, "Length of outer arrays should be the same.");
-  actual.forEach(function (actualChildArr, i) {
-    let expectedChildArr = expected[i];
-    equal(actualChildArr.length, expectedChildArr.length, "Length of inner arrays should be the same.");
-    actualChildArr.forEach(function (actualElt, j) {
-      let expectedElt = expectedChildArr[j];
+function arraysOK(actual, expected, cmp) {
+  if (actual.length != expected.length) {
+    do_throw("Length is not equal: " + JSON.stringify(actual) + "==" + JSON.stringify(expected));
+  } else {
+    actual.forEach(function (actualElt, j) {
+      let expectedElt = expected[j];
       cmp(actualElt, expectedElt);
     });
+  }
+}
+
+function arraysOfArraysOK(actual, expected, cmp) {
+  cmp = cmp || equal;
+  arraysOK(actual, expected, function (act, exp) {
+    arraysOK(act, exp, cmp)
   });
 }
 

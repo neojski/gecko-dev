@@ -36,16 +36,16 @@ let tests = [
   },
 
   function domainsWithDate() {
-    yield setWithDate("a.com", "foobar", 0, 000);
-    yield setWithDate("a.com", "foo", 1, 100);
-    yield setWithDate("a.com", "bar", 2, 400);
+    yield setWithDate("a.com", "foobar", 0, 0);
+    yield setWithDate("a.com", "foo", 1, 1000);
+    yield setWithDate("a.com", "bar", 2, 4000);
     yield setGlobal("foo", 3);
     yield setGlobal("bar", 4);
-    yield setWithDate("b.com", "foo", 5, 200);
-    yield setWithDate("b.com", "bar", 6, 300);
-    yield setWithDate("b.com", "foobar", 7, 100);
+    yield setWithDate("b.com", "foo", 5, 2000);
+    yield setWithDate("b.com", "bar", 6, 3000);
+    yield setWithDate("b.com", "foobar", 7, 1000);
 
-    yield cps.removeAllDomainsSince(200, null, makeCallback());
+    yield cps.removeAllDomainsSince(2000, null, makeCallback());
     yield dbOK([
       ["a.com", "foobar", 0],
       ["a.com", "foo", 1],
@@ -60,10 +60,12 @@ let tests = [
     // we just do here rough sanity check with one minute tolerance.
     const MINUTE = 60 * 1000 * 1000;
     let now = Date.now();
+    let start = now - MINUTE;
+    let end = now + MINUTE;
     yield set("a.com", "foo", 1);
     let timestamp = yield getDate("a.com", "foo");
-    ok(now - MINUTE <= timestamp, "Timestamp is not too early.");
-    ok(timestamp <= now + MINUTE, "Timestamp is not too late.");
+    ok(start <= timestamp, "Timestamp is not too early (" + start + "<=" + timestamp + ").");
+    ok(timestamp <= end, "Timestamp is not too late (" + timestamp + "<=" + end + ").");
   },
 
   function privateBrowsing() {
@@ -100,14 +102,14 @@ let tests = [
   },
 
   function invalidateCache() {
-    yield setWithDate("a.com", "foobar", 0, 000);
-    yield setWithDate("a.com", "foo", 1, 100);
-    yield setWithDate("a.com", "bar", 2, 400);
+    yield setWithDate("a.com", "foobar", 0, 0);
+    yield setWithDate("a.com", "foo", 1, 1000);
+    yield setWithDate("a.com", "bar", 2, 4000);
     yield setGlobal("foo", 3);
     yield setGlobal("bar", 4);
-    yield setWithDate("b.com", "foo", 5, 200);
-    yield setWithDate("b.com", "bar", 6, 300);
-    yield setWithDate("b.com", "foobar", 7, 100);
+    yield setWithDate("b.com", "foo", 5, 2000);
+    yield setWithDate("b.com", "bar", 6, 3000);
+    yield setWithDate("b.com", "foobar", 7, 1000);
     cps.removeAllDomainsSince(0, null, makeCallback());
     getCachedOK(["a.com", "foobar"], false);
     getCachedOK(["a.com", "foo"], false);
