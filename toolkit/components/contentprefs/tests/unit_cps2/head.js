@@ -31,7 +31,7 @@ function runAsyncTests(tests, dontResetBefore = false) {
   asyncRunner = new s.AsyncRunner({
     done: do_test_finished,
     error: function (err) {
-      // xpcshell test functions like do_check_eq throw NS_ERROR_ABORT on
+      // xpcshell test functions like equal throw NS_ERROR_ABORT on
       // failure.  Ignore those and catch only uncaught exceptions.
       if (err !== Cr.NS_ERROR_ABORT) {
         if (err.stack) {
@@ -97,7 +97,7 @@ function makeCallback(callbacks, success = null) {
   }
   if (!callbacks.handleCompletion)
     callbacks.handleCompletion = function (reason) {
-      do_check_eq(reason, Ci.nsIContentPrefCallback2.COMPLETE_OK);
+      equal(reason, Ci.nsIContentPrefCallback2.COMPLETE_OK);
       if (success) {
         success();
       } else {
@@ -115,7 +115,7 @@ function do_check_throws(fn) {
   catch (err) {
     threw = true;
   }
-  do_check_true(threw);
+  ok(threw);
 }
 
 function sendMessage(msg, callback) {
@@ -192,13 +192,13 @@ function setGlobal(name, val, context) {
 }
 
 function prefOK(actual, expected, strict) {
-  do_check_true(actual instanceof Ci.nsIContentPref);
-  do_check_eq(actual.domain, expected.domain);
-  do_check_eq(actual.name, expected.name);
+  ok(actual instanceof Ci.nsIContentPref);
+  equal(actual.domain, expected.domain);
+  equal(actual.name, expected.name);
   if (strict)
-    do_check_true(actual.value === expected.value);
+    ok(actual.value === expected.value);
   else
-    do_check_eq(actual.value, expected.value);
+    equal(actual.value, expected.value);
 }
 
 function getOK(args, expectedVal, expectedGroup, strict) {
@@ -260,7 +260,7 @@ function getCachedSubdomainsOK(args, expectedGroupValPairs) {
   actualPrefs = actualPrefs.sort(function (a, b) {
     return a.domain.localeCompare(b.domain);
   });
-  do_check_eq(actualPrefs.length, len.value);
+  equal(actualPrefs.length, len.value);
   let expectedPrefs = expectedGroupValPairs.map(function ([group, val]) {
     return { domain: group, name: args[1], value: val };
   });
@@ -283,7 +283,7 @@ function getCachedOKEx(methodName, args, expectedPref, strict) {
   if (expectedPref)
     prefOK(actualPref, expectedPref, strict);
   else
-    do_check_true(actualPref === null);
+    ok(actualPref === null);
 }
 
 function arraysOK(actual, expected, cmp) {
@@ -401,6 +401,6 @@ function wait() {
 }
 
 function observerArgsOK(actualArgs, expectedArgs) {
-  do_check_neq(actualArgs, undefined);
+  notEqual(actualArgs, undefined);
   arraysOfArraysOK(actualArgs, expectedArgs);
 }
