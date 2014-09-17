@@ -318,7 +318,7 @@ ContentPrefService2.prototype = {
     }
     stmt.params.name = name;
     stmt.params.value = value;
-    stmt.params.now = Date.now() * 1000; // We store time in microseconds
+    stmt.params.now = Date.now() / 1000;
     stmts.push(stmt);
 
     this._execStmts(stmts, {
@@ -382,7 +382,7 @@ ContentPrefService2.prototype = {
     stmt.params.name = name;
     stmts.push(stmt);
 
-    stmts = stmts.concat(this._settingsAndGroupsCleanupStmt());
+    stmts = stmts.concat(this._settingsAndGroupsCleanupStmts());
 
     let prefs = new ContentPrefStore();
 
@@ -416,21 +416,21 @@ ContentPrefService2.prototype = {
     });
   },
 
-  // Delete settings and groups that are no longer used. The NOTNULL term in
-  // the subquery of the second statment is needed because of SQLite's weird
-  // IN behavior vis-a-vis NULLs.  See http://sqlite.org/lang_expr.html.
-  _settingsAndGroupsCleanupStmt: function() {
-    let stmts = [];
-    stmts.push(this._stmt(`
-      DELETE FROM settings
-      WHERE id NOT IN (SELECT DISTINCT settingID FROM prefs)
-    `));
-    stmts.push(this._stmt(`
-      DELETE FROM groups WHERE id NOT IN (
-        SELECT DISTINCT groupID FROM prefs WHERE groupID NOTNULL
-      )
-    `));
-    return stmts;
+  // Deletes settings and groups that are no longer used.
+  _settingsAndGroupsCleanupStmts: function() {
+    // The NOTNULL term in the subquery of the second statment is needed because of
+    // SQLite's weird IN behavior vis-a-vis NULLs.  See http://sqlite.org/lang_expr.html.
+    return [
+      this._stmt(`
+        DELETE FROM settings
+        WHERE id NOT IN (SELECT DISTINCT settingID FROM prefs)
+      `),
+      this._stmt(`
+        DELETE FROM groups WHERE id NOT IN (
+          SELECT DISTINCT groupID FROM prefs WHERE groupID NOTNULL
+        )
+      `)
+    ];
   },
 
   removeByDomain: function CPS2_removeByDomain(group, context, callback) {
@@ -531,6 +531,8 @@ ContentPrefService2.prototype = {
   _removeAllDomainsSince: function CPS2__removeAllDomainsSince(since, context, callback) {
     checkCallbackArg(callback, false);
 
+    // Invalidate the cached values so consumers accessing the cache between now
+    // and when the operation finishes don't get old data.
     // Invalidate all the group cache because we don't know which groups will be removed.
     this._cache.removeAllGroups();
 
@@ -543,7 +545,8 @@ ContentPrefService2.prototype = {
       FROM prefs
       JOIN settings ON settings.id = prefs.settingID
       JOIN groups ON groups.id = prefs.groupID
-    ` + (since !== null ? ' WHERE timestamp >= :since' : ''));
+      ${since !== null ? ' WHERE timestamp >= :since' : ''}
+    `);
     if (since !== null) {
       stmt.params.since = since;
     }
@@ -552,14 +555,15 @@ ContentPrefService2.prototype = {
     // Do the actual remove.
     stmt = this._stmt(`
       DELETE FROM prefs WHERE groupID NOTNULL
-    ` + (since !== null ? ' AND timestamp >= :since' : ''));
+      ${since !== null ? ' AND timestamp >= :since' : ''}
+    `);
     if (since !== null) {
       stmt.params.since = since;
     }
     stmts.push(stmt);
 
     // Cleanup no longer used values.
-    stmts = stmts.concat(this._settingsAndGroupsCleanupStmt());
+    stmts = stmts.concat(this._settingsAndGroupsCleanupStmts());
 
     let prefs = new ContentPrefStore();
     this._execStmts(stmts, {
@@ -592,7 +596,7 @@ ContentPrefService2.prototype = {
   },
 
   removeAllDomainsSince: function CPS2_removeAllDomainsSince(since, context, callback) {
-    this._removeAllDomainsSince(since, context, callback);
+    this._removeAllDomainsSince(since / 1000, context, callback);
   },
 
   removeAllDomains: function CPS2_removeAllDomains(context, callback) {

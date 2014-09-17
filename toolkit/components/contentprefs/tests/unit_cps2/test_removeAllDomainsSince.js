@@ -56,12 +56,14 @@ let tests = [
   },
 
   function setSetsCurrentDate() {
-    let start = Date.now() * 1000;
+    // Because Date.now() is not guaranteed to be monotonically increasing
+    // we just do here rough sanity check with one minute tolerance.
+    const MINUTE = 60 * 1000 * 1000;
+    let now = Date.now();
     yield set("a.com", "foo", 1);
-    let end = Date.now() * 1000;
     let timestamp = yield getDate("a.com", "foo");
-    ok(start <= timestamp, "Timestamp is at lest start.");
-    ok(timestamp <= end, "Timestamp is at most end.");
+    ok(now - MINUTE <= timestamp, "Timestamp is not too early.");
+    ok(timestamp <= now + MINUTE, "Timestamp is not too late.");
   },
 
   function privateBrowsing() {
@@ -115,6 +117,6 @@ let tests = [
     getCachedOK(["b.com", "foo"], false);
     getCachedOK(["b.com", "bar"], false);
     getCachedOK(["b.com", "foobar"], false);
-    yield;
+    yield true;
   },
 ];

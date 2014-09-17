@@ -1012,7 +1012,7 @@ ContentPrefService.prototype = {
                    groupID      INTEGER REFERENCES groups(id), \
                    settingID    INTEGER NOT NULL REFERENCES settings(id), \
                    value        BLOB, \
-                   timestamp    INTEGER" // timestamp is NULL for migrated fields
+                   timestamp    INTEGER" // Storage in seconds, API in ms. 0 for migrated values.
     },
     indices: {
       groups_idx: {

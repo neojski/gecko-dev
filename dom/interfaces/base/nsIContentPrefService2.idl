@@ -302,11 +302,11 @@ interface nsIContentPrefService2 : nsISupports
   /**
    * Removes all preferences created after |since|.
    *
-   * @param since     The number of microseconds.
+   * @param since     Timestamp in milliseconds.
    * @param context   The private-browsing context, if any.
    * @param callback  handleCompletion is called when the operation completes.
    */
-  void removeAllDomainsSince(in PRTime since,
+  void removeAllDomainsSince(in unsigned long long since,
                              in nsILoadContext context,
                              [optional] in nsIContentPrefCallback2 callback);
 
