@@ -161,11 +161,11 @@ let gSearch = {
   },
 
   // Converts favicon array buffer into data URI of the right size and dpi.
-  _getFaviconURIFromBuffer: function(buffer, size) {
-      let blob = new Blob([buffer]);
-      let dpiSize = Math.round(size * window.devicePixelRatio);
-      let sizeStr = dpiSize + "," + dpiSize;
-      return URL.createObjectURL(blob) + "#-moz-resolution=" + sizeStr;
+  _getFaviconURIFromBuffer: function (buffer) {
+    let blob = new Blob([buffer]);
+    let dpiSize = Math.round(16 * window.devicePixelRatio);
+    let sizeStr = dpiSize + "," + dpiSize;
+    return URL.createObjectURL(blob) + "#-moz-resolution=" + sizeStr;
   },
 
   _makePanelEngine: function (panel, engine) {
@@ -181,7 +181,7 @@ let gSearch = {
 
     let image = document.createElementNS(XUL_NAMESPACE, "image");
     if (engine.iconBuffer) {
-      let uri = this._getFaviconURIFromBuffer(engine.iconBuffer, 16);
+      let uri = this._getFaviconURIFromBuffer(engine.iconBuffer);
       image.setAttribute("src", uri);
     }
     box.appendChild(image);
@@ -198,14 +198,15 @@ let gSearch = {
 
     let type = "";
     let uri;
-    if (engine.logoBuffer || engine.logo2xBuffer) {
-      let logoBuf = window.devicePixelRatio >= 2 ? engine.logo2xBuffer || engine.logoBuffer :
+    let logoBuf = window.devicePixelRatio >= 2 ?
+                  engine.logo2xBuffer || engine.logoBuffer :
                   engine.logoBuffer || engine.logo2xBuffer;
+    if (logoBuf) {
       uri = URL.createObjectURL(new Blob([logoBuf]));
       type = "logo";
     }
     else if (engine.iconBuffer) {
-      uri = this._getFaviconURIFromBuffer(engine.iconBuffer, 16);
+      uri = this._getFaviconURIFromBuffer(engine.iconBuffer);
       type = "favicon";
     }
     this._nodes.logo.setAttribute("type", type);

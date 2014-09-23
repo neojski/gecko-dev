@@ -388,7 +388,7 @@ let currentEngineObj = Task.async(function* () {
     name: engine.name,
     logoBuffer: yield arrayBufferFromDataURI(uri1x),
     logo2xBuffer: yield arrayBufferFromDataURI(uri2x),
-    iconBuffer: yield arrayBufferFromDataURI(uri1x),
+    iconBuffer: yield arrayBufferFromDataURI(uriFavicon),
   };
 });
 
