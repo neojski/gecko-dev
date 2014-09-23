@@ -338,9 +338,7 @@ function blobToBase64(blob) {
   });
 }
 
-function checkCurrentEngine({name: basename, logoPrefix1x, logoPrefix2x}) {
-  let deferred = Promise.defer();
-
+let checkCurrentEngine = Task.async(function* ({name: basename, logoPrefix1x, logoPrefix2x}) {
   let engine = Services.search.currentEngine;
   ok(engine.name.contains(basename),
      "Sanity check: current engine: engine.name=" + engine.name +
@@ -357,41 +355,35 @@ function checkCurrentEngine({name: basename, logoPrefix1x, logoPrefix2x}) {
   if (expectedLogoPrefix) {
     let objectURL = logo.style.backgroundImage.match(/^url\("([^"]*)"\)$/)[1];
     ok(objectURL, "ObjectURL should be there.");
-    objectURLToBlob(objectURL).then(blobToBase64).then(function(res) {
-      ok(res.startsWith(expectedLogoPrefix), "Checking image prefix.");
-      checkSelectedAttribute();
-    }, function (reason) {
-      ok(false, "Logo check failed with: " + reason);
-    });
+
+    let blob = yield objectURLToBlob(objectURL);
+    let base64 = yield blobToBase64(blob);
+
+    ok(base64.startsWith(expectedLogoPrefix), "Checking image prefix.");
+
+    let panel = searchPanel();
+    panel.openPopup(logo);
+    yield promisePanelShown(panel);
+
+    panel.hidePopup();
+    for (let engineBox of panel.childNodes) {
+      let engineName = engineBox.getAttribute("engine");
+      if (engineName == engine.name) {
+        is(engineBox.getAttribute("selected"), "true",
+           "Engine box's selected attribute should be true for " +
+           "selected engine: " + engineName);
+      }
+      else {
+        ok(!engineBox.hasAttribute("selected"),
+           "Engine box's selected attribute should be absent for " +
+           "non-selected engine: " + engineName);
+      }
+    }
   }
   else {
-    deferred.resolve();
+    is(logo.style.backgroundImage, "", "backgroundImage should be empty");
   }
-
-  function checkSelectedAttribute() {
-      // "selected" attributes of engines in the panel
-    let panel = searchPanel();
-    promisePanelShown(panel).then(() => {
-      panel.hidePopup();
-      for (let engineBox of panel.childNodes) {
-        let engineName = engineBox.getAttribute("engine");
-        if (engineName == engine.name) {
-          is(engineBox.getAttribute("selected"), "true",
-             "Engine box's selected attribute should be true for " +
-             "selected engine: " + engineName);
-        }
-        else {
-          ok(!engineBox.hasAttribute("selected"),
-             "Engine box's selected attribute should be absent for " +
-             "non-selected engine: " + engineName);
-        }
-      }
-      deferred.resolve();
-    });
-    panel.openPopup(logo);
-  }
-  return deferred.promise;
-}
+});
 
 function promisePanelShown(panel) {
   let deferred = Promise.defer();
