@@ -340,9 +340,7 @@ function addNewTabPageTabPromise() {
     if (NewTabUtils.allPages.enabled) {
       // Continue when the link cache has been populated.
       NewTabUtils.links.populateCache(function () {
-        whenSearchInitDone().then(function () {
-          deferred.resolve();
-        });
+        deferred.resolve(whenSearchInitDone());
       });
     } else {
       deferred.resolve();
@@ -351,7 +349,8 @@ function addNewTabPageTabPromise() {
 
   // The new tab page might have been preloaded in the background.
   if (browser.contentDocument.readyState == "complete") {
-    deferred.resolve();
+    whenNewTabLoaded();
+    return deferred.promise;
   }
 
   // Wait for the new tab page to be loaded.

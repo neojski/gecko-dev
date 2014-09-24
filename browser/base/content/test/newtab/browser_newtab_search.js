@@ -62,7 +62,7 @@ var gExpectedSearchEventQueue = [];
 var gNewEngines = [];
 
 function runTests() {
-  runTaskifiedTests().then(TestRunner.next);
+  runTaskifiedTests().then(TestRunner.next, TestRunner.next);
   yield;
 }
 
@@ -247,23 +247,17 @@ let runTaskifiedTests = Task.async(function* () {
 
 function searchEventListener(event) {
   info("Got search event " + event.detail.type);
-  let passed = false;
   let nonempty = gExpectedSearchEventQueue.length > 0;
   ok(nonempty, "Expected search event queue should be nonempty");
   if (nonempty) {
     let { type, deferred } = gExpectedSearchEventQueue.shift();
     is(event.detail.type, type, "Got expected search event " + type);
     if (event.detail.type == type) {
-      passed = true;
       // Let gSearch respond to the event before continuing.
       executeSoon(() => deferred.resolve());
+    } else {
+      executeSoon(() => deferred.reject());
     }
-  }
-  if (!passed) {
-    info("Didn't get expected event, stopping the test");
-    getContentWindow().removeEventListener(SERVICE_EVENT_NAME,
-                                           searchEventListener);
-    // Set next() to a no-op so the test really does stop.
   }
 }
 
