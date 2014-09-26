@@ -253,10 +253,9 @@ function searchEventListener(event) {
     let { type, deferred } = gExpectedSearchEventQueue.shift();
     is(event.detail.type, type, "Got expected search event " + type);
     if (event.detail.type == type) {
-      // Let gSearch respond to the event before continuing.
-      executeSoon(() => deferred.resolve());
+      deferred.resolve();
     } else {
-      executeSoon(() => deferred.reject());
+      deferred.reject();
     }
   }
 }
@@ -385,7 +384,7 @@ function promisePanelShown(panel) {
   panel.addEventListener("popupshown", function onEvent() {
     panel.removeEventListener("popupshown", onEvent);
     is(panel.state, "open", "Panel state");
-    executeSoon(() => deferred.resolve());
+    deferred.resolve();
   });
   return deferred.promise;
 }
@@ -416,10 +415,8 @@ function promiseManagerOpen() {
           is(subj.opener, gWindow,
              "Search engine manager opener should be the chrome browser " +
              "window containing the newtab page");
-          executeSoon(() => {
-            subj.close();
-            deferred.resolve();
-          });
+          subj.close();
+          deferred.resolve();
         }
       });
     }
