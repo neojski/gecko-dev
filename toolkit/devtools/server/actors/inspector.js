@@ -2132,19 +2132,24 @@ var WalkerActor = protocol.ActorClass({
          node.rawNode.nodeType === Ci.nsIDOMNode.DOCUMENT_NODE) {
       throw Error("Cannot remove document or document elements.");
     }
+    let previousSibling = this.previousSibling(node);
     let nextSibling = this.nextSibling(node);
     if (node.rawNode.parentNode) {
       node.rawNode.parentNode.removeChild(node.rawNode);
       // Mutation events will take care of the rest.
     }
-    return nextSibling;
+    return {
+      previousSibling: previousSibling,
+      nextSibling: nextSibling
+    };
   }, {
     request: {
       node: Arg(0, "domnode")
     },
-    response: {
+    response: RetVal(types.addDictType("siblings", {
+      previousSibling: RetVal("nullable:domnode"),
       nextSibling: RetVal("nullable:domnode")
-    }
+    }))
   }),
 
   /**
