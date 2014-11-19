@@ -22,7 +22,7 @@ function* checkDeleteAndSelection(inspector, nodeSelector, focusedNodeSelector) 
 
   let nodeFront = yield getNodeFront(focusedNodeSelector, inspector);
   is(inspector.selection.nodeFront, nodeFront,
-     "Right node (previousSibling or parent) should be selected after a node gets deleted");
+    focusedNodeSelector + " should be selected after " + nodeSelector + " node gets deleted.");
 
   info("Checking that it's gone, baby gone!");
   ok(!content.document.querySelector(nodeSelector), "The test node does not exist");

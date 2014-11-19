@@ -523,12 +523,9 @@ MarkupView.prototype = {
       let parent = aNode.parentNode();
       let nextSibling = null;
       this.undo.do(() => {
-        // removeNode used to return nextSibling. Now it returns
-        // {previousSibling, nextSibling} so we can focus the previousSibling.
         this.walker.removeNode(aNode).then(siblings => {
-          nextSibling = siblings.nextSibling || siblings;
           let focusNode = siblings.previousSibling || parent;
-
+          nextSibling = siblings.nextSibling;
           if (container.selected) {
             this.navigate(this.getContainer(focusNode));
           }

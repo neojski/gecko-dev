@@ -2140,7 +2140,7 @@ var WalkerActor = protocol.ActorClass({
     }
     return {
       previousSibling: previousSibling,
-      nextSibling: nextSibling
+      nextSibling: nextSibling,
     };
   }, {
     request: {
@@ -2149,7 +2149,7 @@ var WalkerActor = protocol.ActorClass({
     response: RetVal(types.addDictType("siblings", {
       previousSibling: RetVal("nullable:domnode"),
       nextSibling: RetVal("nullable:domnode")
-    }))
+    })),
   }),
 
   /**
@@ -2881,7 +2881,26 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
       walkerActor._orphaned.add(this.conn._transport._serverConnection.getActor(top.actorID));
     }
     return returnNode;
-  }
+  },
+
+  removeNode: protocol.custom(function(node) {
+    return this._removeNode(node).then(siblings => {
+      if (siblings && siblings.previousSibling !== undefined) {
+        return siblings;
+      }
+      // For old server `removeNode` returns `nextSibling`.
+      // So we manually retrieve `previousSibling`.
+      let nextSibling = siblings;
+      return this.previousSibling(nextSibling).then(previousSibling => {
+        return {
+          previousSibling: previousSibling,
+          nextSibling: nextSibling,
+        };
+      });
+    });
+  }, {
+    impl: "_removeNode"
+  }),
 });
 
 /**
