@@ -56,6 +56,7 @@ const protocol = require("devtools/server/protocol");
 const {Arg, Option, method, RetVal, types} = protocol;
 const {LongStringActor, ShortLongString} = require("devtools/server/actors/string");
 const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
+const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 const object = require("sdk/util/object");
 const events = require("sdk/event/core");
 const {Unknown} = require("sdk/platform/xpcom");
@@ -2132,24 +2133,19 @@ var WalkerActor = protocol.ActorClass({
          node.rawNode.nodeType === Ci.nsIDOMNode.DOCUMENT_NODE) {
       throw Error("Cannot remove document or document elements.");
     }
-    let previousSibling = this.previousSibling(node);
     let nextSibling = this.nextSibling(node);
     if (node.rawNode.parentNode) {
       node.rawNode.parentNode.removeChild(node.rawNode);
       // Mutation events will take care of the rest.
     }
-    return {
-      previousSibling: previousSibling,
-      nextSibling: nextSibling,
-    };
+    return nextSibling;
   }, {
     request: {
       node: Arg(0, "domnode")
     },
-    response: RetVal(types.addDictType("siblings", {
-      previousSibling: RetVal("nullable:domnode"),
+    response: {
       nextSibling: RetVal("nullable:domnode")
-    })),
+    }
   }),
 
   /**
@@ -2883,22 +2879,14 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
     return returnNode;
   },
 
-  removeNode: protocol.custom(function(node) {
-    return this._removeNode(node).then(siblings => {
-      if (siblings && siblings.previousSibling !== undefined) {
-        return siblings;
-      }
-      // For old server `removeNode` returns `nextSibling`.
-      // So we manually retrieve `previousSibling`.
-      let nextSibling = siblings;
-      return this.previousSibling(nextSibling).then(previousSibling => {
-        return {
-          previousSibling: previousSibling,
-          nextSibling: nextSibling,
-        };
-      });
-    });
-  }, {
+  removeNode: protocol.custom(Task.async(function* (node) {
+    let previousSibling = yield this.previousSibling(node);
+    let nextSibling = yield this._removeNode(node);
+    return {
+      previousSibling: previousSibling,
+      nextSibling: nextSibling,
+    };
+  }), {
     impl: "_removeNode"
   }),
 });
