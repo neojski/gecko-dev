@@ -44,6 +44,7 @@ this.DOMRequestIpcHelper = function DOMRequestIpcHelper() {
   this._listeners = null;
   this._requests = null;
   this._window = null;
+  this._mm = null;
 }
 
 DOMRequestIpcHelper.prototype = {
@@ -94,8 +95,8 @@ DOMRequestIpcHelper.prototype = {
         }
       }
 
-      aMsg.weakRef ? cpmm.addWeakMessageListener(name, this)
-                   : cpmm.addMessageListener(name, this);
+      aMsg.weakRef ? this._mm.addWeakMessageListener(name, this)
+                   : this._mm.addMessageListener(name, this);
       this._listeners[name] = {
         weakRef: !!aMsg.weakRef,
         count: 1
@@ -125,8 +126,8 @@ DOMRequestIpcHelper.prototype = {
       // be waiting on a message.
       if (!--this._listeners[aName].count) {
         this._listeners[aName].weakRef ?
-            cpmm.removeWeakMessageListener(aName, this)
-          : cpmm.removeMessageListener(aName, this);
+            this._mm.removeWeakMessageListener(aName, this)
+          : this._mm.removeMessageListener(aName, this);
         delete this._listeners[aName];
       }
     });
@@ -149,7 +150,7 @@ DOMRequestIpcHelper.prototype = {
    *  - or only strings containing the message name, in which case the listener
    *    will be added as a strong referred one by default.
    */
-  initDOMRequestHelper: function(aWindow, aMessages) {
+  initDOMRequestHelper: function(aWindow, aMessages, aMessageManager) {
     // Query our required interfaces to force a fast fail if they are not
     // provided. These calls will throw if the interface is not available.
     this.QueryInterface(Ci.nsISupportsWeakReference);
@@ -171,6 +172,8 @@ DOMRequestIpcHelper.prototype = {
 
     this._destroyed = false;
 
+    this._mm = aMessageManager || cpmm;
+
     Services.obs.addObserver(this, "inner-window-destroyed",
                              /* weak-ref */ true);
   },
@@ -186,8 +189,8 @@ DOMRequestIpcHelper.prototype = {
 
     if (this._listeners) {
       Object.keys(this._listeners).forEach((aName) => {
-        this._listeners[aName].weakRef ? cpmm.removeWeakMessageListener(aName, this)
-                                       : cpmm.removeMessageListener(aName, this);
+        this._listeners[aName].weakRef ? this._mm.removeWeakMessageListener(aName, this)
+                                       : this._mm.removeMessageListener(aName, this);
       });
     }
 

@@ -4,6 +4,8 @@
 
 "use strict";
 
+Components.utils.import("resource://gre/modules/DOMRequestHelper.jsm");
+
 function l(msg, dumpStack) {
   let end = "\n";
   if (dumpStack) {
@@ -41,57 +43,31 @@ function MozSelfSupportInterface() {
 }
 
 MozSelfSupportInterface.prototype = {
+  // This is very bad design of DOMRequestHelper...
+  __proto__: DOMRequestIpcHelper.prototype,
   classDescription: "MozSelfSupport",
   classID: Components.ID("{d30aae8b-f352-4de3-b936-bb9d875df0bb}"),
   contractID: "@mozilla.org/mozselfsupport;1",
 //   QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMGlobalPropertyInitializer]),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMGlobalPropertyInitializer,
-                                         Ci.nsIMessageListener]),
+                                         Ci.nsIMessageListener,
+                                         Ci.nsIObserver,
+                                         Ci.nsISupportsWeakReference]),
 
-  _window: null,
   _mm: null,
 
-  init: function (window) {
+  init: function (aWindow) {
     l("init");
-    this._window = window;
-    this._mm = window.QueryInterface(Ci.nsIInterfaceRequestor)
+    this._mm = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                      .getInterface(Ci.nsIDocShell)
                      .QueryInterface(Ci.nsIInterfaceRequestor)
                      .getInterface(Ci.nsIContentFrameMessageManager);
 
-    Services.obs.addObserver(this, "dom-window-destroyed", false);
-//     Services.obs.addObserver(this, "inner-window-destroyed", false);
-    this._mm.addMessageListener("SelfSupportService", this);
+    this.initDOMRequestHelper(aWindow, ["SelfSupportService"], this._mm);
 
     let util = this._window.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindowUtils);
     this.innerWindowID = util.currentInnerWindowID;
-  },
-
-  observe: function(aSubject, aTopic, aData) {
-    switch (aTopic) {
-      case "dom-window-destroyed":
-        l("dom-window-destroyed, aSubject=" + aSubject);
-        if (aSubject != this._window) {
-          l("dom-window-destroyed, not our window");
-          return;
-        }
-        l("dom-window-destroyed, our window");
-        Services.obs.removeObserver(this, "dom-window-destroyed");
-        this._mm.removeMessageListener("SelfSupportService", this);
-        break;
-      case "inner-window-destroyed":
-        l("inner-window-destroyed");
-        let wId = aSubject.QueryInterface(Ci.nsISupportsPRUint64).data;
-        if (wId != this.innerWindowID) {
-          l("inner-window-destroyed, not our window");
-          return;
-        }
-        l("inner-window-destroyed, our window");
-        Services.obs.removeObserver(this, "inner-window-destroyed");
-        this._mm.removeMessageListener("SelfSupportService", this);
-        break;
-    }
   },
 
   get healthReportDataSubmissionEnabled() {
@@ -123,52 +99,38 @@ MozSelfSupportInterface.prototype = {
     }.bind(this));
   },
 
-  _msgId: 0,
-  _deferred: {},
   receiveMessage: function(aMessage) {
-    var data = aMessage.data;
-    var msgId = data.msgId;
-    var args = data.args;
+    let data = aMessage.data;
+    let args = data.args;
+    let requestId = data.requestId;
 
-    l("receiveMessage data=" + JSON.stringify(data), true);
+    l("receiveMessage")
 
-    var deferred = this._deferred[msgId];
-    if (!deferred) {
-      // This is not necessarily an error. Since the chrome part of this code is
-      // using callback it may happen that after resolve message (button clicked)
-      // we'll get a reject message (notification bar closed). Just ignore it.
-      return;
-    }
+    let resolver = this.getPromiseResolver(requestId);
+    this.removePromiseResolver(requestId);
 
     switch (args.type) {
       case "resolve":
-        deferred.resolve(args.value);
+        resolver.resolve(args.value);
         break;
       case "reject":
-        deferred.reject(args.reason);
+        resolver.reject(args.reason);
         break;
       default:
         Cu.reportError("SelfSupportService got unknown message type: " + args.type + ".");
         return;
     }
-
-    this._deferred[msgId] = null;
   },
 
   // For now we just ignore aIcon. Default icon (depending on aPriority) will
   // be shown.
   showNotification: function(aLabel, aPriority, aButtons, aIcon) {
     l("showNotification", true);
-    return new this._window.Promise((resolve, reject) => {
+    return this.createPromise((resolve, reject) => {
       l("showNotification promise");
-      let msgId = ++this._msgId;
-      this._deferred[msgId] = {
-        resolve: resolve,
-        reject: reject,
-      };
-      var priority = NOTIFICATION_PRIORITIES[aPriority];
-      var positionTop = priority >= NOTIFICATION_PRIORITIES.critical;
-      var args = {
+      let priority = NOTIFICATION_PRIORITIES[aPriority];
+      let positionTop = priority >= NOTIFICATION_PRIORITIES.critical;
+      let args = {
         positionTop: positionTop,
         label: aLabel,
         value: NOTIFICATION_VALUE,
@@ -176,7 +138,13 @@ MozSelfSupportInterface.prototype = {
         priority: priority,
         buttons: aButtons,
       };
-      let data = {args: args, msgId: msgId};
+      let data = {
+        args: args,
+        requestId: this.getPromiseResolverId({
+          resolve: resolve,
+          reject: reject
+        })
+      };
       l("showNotification promise, calling sendAsyncMessage('SelfSupportService') data=" + JSON.stringify(data));
       this._mm.sendAsyncMessage("SelfSupportService", data);
     });

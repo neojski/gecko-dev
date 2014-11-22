@@ -47,15 +47,15 @@ this.SelfSupportService.prototype = {
     let mm = aMessage.target.messageManager;
     let data = aMessage.data;
     let args = data.args;
-    let msgId = data.msgId;
+    let requestId = data.requestId;
 
     l("handleShowNotification data=" + JSON.stringify(data));
 
     function sendResponse(args) {
-      l("handleShowNotification, sendResponse msgId=" + msgId + " args=" + JSON.stringify(args));
+      l("handleShowNotification, sendResponse requestId=" + requestId + " args=" + JSON.stringify(args));
       mm.sendAsyncMessage("SelfSupportService", {
         args: args,
-        msgId: msgId,
+        requestId: requestId,
       });
     }
 
@@ -90,7 +90,4 @@ this.SelfSupportService.prototype = {
     this._window.document.getElementById(notificationBox).appendNotification(
       args.label, args.value, args.image, args.priority, buttons, eventCallback);
   },
-//   uninit: function() {
-//     this._window.messageManager.removeMessageListener("SelfSupportService", this);
-//   }
 };
