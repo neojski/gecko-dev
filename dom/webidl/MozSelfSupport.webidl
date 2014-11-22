@@ -2,6 +2,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+dictionary NotificationButton {
+  DOMString label;
+  DOMString id;
+  DOMString accessKey;
+};
+
+enum NotificationPriority {
+  "info",
+  "warning",
+  "critical",
+};
+
+enum NotificationIcon {
+  "default",
+  "addon",
+};
+
 /**
  * The MozSelfSupport interface allows external Mozilla support sites such as
  * FHR and SUMO to access data and control settings that are not otherwise
@@ -39,4 +56,19 @@ interface MozSelfSupport
    *         Resolved when the FHR payload data has been collected.
    */
   Promise<object> getHealthReportPayload();
+
+  /**
+   * Shows notification in browser chrome with the given message and buttons.
+   *
+   * @param message Message show on the notification bar.
+   * @param priority
+   * @param buttons List of buttons shown on the notification bar.
+   * @param icon Icon for the notification bar. Currently this argument is ignored.
+   *             and the default icon (depending on the priority) will be shown.
+   * @return Promise<String>
+   *         Resolved with the clicked button ID.
+   *         Rejected when the notification is canceled without clicking a button.
+   */
+  Promise<DOMString> showNotification(DOMString message, NotificationPriority priority,
+    sequence<NotificationButton> buttons, optional NotificationIcon icon = "default");
 };

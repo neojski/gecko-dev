@@ -11,6 +11,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NotificationDB.jsm");
 Cu.import("resource:///modules/RecentWindow.jsm");
 Cu.import("resource://gre/modules/WindowsPrefSync.jsm");
+Cu.import("resource:///modules/SelfSupportService.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "BrowserUITelemetry",
                                   "resource:///modules/BrowserUITelemetry.jsm");
@@ -916,6 +917,7 @@ var gBrowserInit = {
     LanguageDetectionListener.init();
     BrowserOnClick.init();
     DevEdition.init();
+    this.selfSupportService = new SelfSupportService(window);
 
     let mm = window.getGroupMessageManager("browsers");
     mm.loadFrameScript("chrome://browser/content/content.js", true);
@@ -1502,6 +1504,8 @@ var gBrowserInit = {
     BrowserOnClick.uninit();
 
     DevEdition.uninit();
+
+    this.selfSupportService.uninit();
 
     gMenuButtonUpdateBadge.uninit();
 
