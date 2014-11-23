@@ -6,15 +6,6 @@
 
 Components.utils.import("resource://gre/modules/DOMRequestHelper.jsm");
 
-function l(msg, dumpStack) {
-  let end = "\n";
-  if (dumpStack) {
-    let st = (new Error()).stack.split("\n").slice(1).map(s => "  " + s).join("\n");
-    end = " -- stack:\n" + st + end;
-  }
-  dump("**********XXXadw SSS.JS " + msg + end);
-}
-
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 const NOTIFICATION_PRIORITIES = {
   critical: 8, // PRIORITY_CRITICAL_MEDIUM
@@ -39,16 +30,13 @@ XPCOMUtils.defineLazyGetter(this, "reporter", () => {
 });
 
 function MozSelfSupportInterface() {
-  l("ctor");
 }
 
 MozSelfSupportInterface.prototype = {
-  // This is very bad design of DOMRequestHelper...
   __proto__: DOMRequestIpcHelper.prototype,
   classDescription: "MozSelfSupport",
   classID: Components.ID("{d30aae8b-f352-4de3-b936-bb9d875df0bb}"),
   contractID: "@mozilla.org/mozselfsupport;1",
-//   QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMGlobalPropertyInitializer]),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMGlobalPropertyInitializer,
                                          Ci.nsIMessageListener,
                                          Ci.nsIObserver,
@@ -57,7 +45,6 @@ MozSelfSupportInterface.prototype = {
   _mm: null,
 
   init: function (aWindow) {
-    l("init");
     this._mm = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                      .getInterface(Ci.nsIDocShell)
                      .QueryInterface(Ci.nsIInterfaceRequestor)
@@ -103,9 +90,6 @@ MozSelfSupportInterface.prototype = {
     let data = aMessage.data;
     let args = data.args;
     let requestId = data.requestId;
-
-    l("receiveMessage")
-
     let resolver = this.getPromiseResolver(requestId);
     this.removePromiseResolver(requestId);
 
@@ -125,9 +109,7 @@ MozSelfSupportInterface.prototype = {
   // For now we just ignore aIcon. Default icon (depending on aPriority) will
   // be shown.
   showNotification: function(aLabel, aPriority, aButtons, aIcon) {
-    l("showNotification", true);
     return this.createPromise((resolve, reject) => {
-      l("showNotification promise");
       let priority = NOTIFICATION_PRIORITIES[aPriority];
       let positionTop = priority >= NOTIFICATION_PRIORITIES.critical;
       let args = {
@@ -145,7 +127,6 @@ MozSelfSupportInterface.prototype = {
           reject: reject
         })
       };
-      l("showNotification promise, calling sendAsyncMessage('SelfSupportService') data=" + JSON.stringify(data));
       this._mm.sendAsyncMessage("SelfSupportService", data);
     });
   }
