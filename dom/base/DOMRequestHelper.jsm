@@ -156,6 +156,8 @@ DOMRequestIpcHelper.prototype = {
     this.QueryInterface(Ci.nsISupportsWeakReference);
     this.QueryInterface(Ci.nsIObserver);
 
+    this._mm = aMessageManager || cpmm;
+
     if (aMessages) {
       this.addMessageListeners(aMessages);
     }
@@ -171,8 +173,6 @@ DOMRequestIpcHelper.prototype = {
     }
 
     this._destroyed = false;
-
-    this._mm = aMessageManager || cpmm;
 
     Services.obs.addObserver(this, "inner-window-destroyed",
                              /* weak-ref */ true);
