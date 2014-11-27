@@ -50,7 +50,7 @@ MozSelfSupportInterface.prototype = {
                      .QueryInterface(Ci.nsIInterfaceRequestor)
                      .getInterface(Ci.nsIContentFrameMessageManager);
 
-    this.initDOMRequestHelper(aWindow, ["SelfSupportService"], this._mm);
+    this.initDOMRequestHelper(aWindow, ["SelfSupport"], this._mm);
 
     let util = this._window.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindowUtils);
@@ -101,7 +101,7 @@ MozSelfSupportInterface.prototype = {
         resolver.reject(args.reason);
         break;
       default:
-        Cu.reportError("SelfSupportService got unknown message type: " + args.type + ".");
+        Cu.reportError("SelfSupport got unknown message type: " + args.type + ".");
         return;
     }
   },
@@ -127,7 +127,7 @@ MozSelfSupportInterface.prototype = {
           reject: reject
         })
       };
-      this._mm.sendAsyncMessage("SelfSupportService", data);
+      this._mm.sendAsyncMessage("SelfSupport", data);
     });
   }
 }

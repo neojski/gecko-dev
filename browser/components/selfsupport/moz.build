@@ -5,8 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXTRA_COMPONENTS += [
-    'SelfSupportService.js',
-    'SelfSupportService.manifest',
+    'SelfSupport.js',
+    'SelfSupport.manifest',
 ]
 
 BROWSER_CHROME_MANIFESTS += [

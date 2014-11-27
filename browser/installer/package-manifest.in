@@ -511,8 +511,8 @@
 #endif
 #ifdef MOZ_SERVICES_HEALTHREPORT
 @RESPATH@/components/HealthReportComponents.manifest
-@RESPATH@/browser/components/SelfSupportService.manifest
-@RESPATH@/browser/components/SelfSupportService.js
+@RESPATH@/browser/components/SelfSupport.manifest
+@RESPATH@/browser/components/SelfSupport.js
 #endif
 #ifdef MOZ_SERVICES_SYNC
 @RESPATH@/components/SyncComponents.manifest

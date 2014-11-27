@@ -4,27 +4,27 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["SelfSupportService"];
+this.EXPORTED_SYMBOLS = ["SelfSupport"];
 
 const Cu = Components.utils;
 
-this.SelfSupportService = function SelfSupportService(aWindow) {
+this.SelfSupport = function SelfSupport(aWindow) {
   this._window = aWindow;
-  this._window.messageManager.addMessageListener("SelfSupportService", this);
+  this._window.messageManager.addMessageListener("SelfSupport", this);
 };
 
-this.SelfSupportService.prototype = {
+this.SelfSupport.prototype = {
   _window: null,
 
   uninit: function() {
-    this._window.messageManager.removeMessageListener("SelfSupportService", this);
+    this._window.messageManager.removeMessageListener("SelfSupport", this);
   },
 
   receiveMessage: function(aMessage) {
-    if (aMessage.name == "SelfSupportService") {
+    if (aMessage.name == "SelfSupport") {
       this.handleShowNotification(aMessage);
     } else {
-      Cu.reportError("SelfSupportService received unknown message: " + aMessage.name);
+      Cu.reportError("SelfSupport received unknown message: " + aMessage.name);
     }
   },
 
@@ -38,7 +38,7 @@ this.SelfSupportService.prototype = {
     let requestId = data.requestId;
 
     function sendResponse(args) {
-      mm.sendAsyncMessage("SelfSupportService", {
+      mm.sendAsyncMessage("SelfSupport", {
         args: args,
         requestId: requestId,
       });
