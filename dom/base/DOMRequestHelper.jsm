@@ -149,6 +149,9 @@ DOMRequestIpcHelper.prototype = {
    *
    *  - or only strings containing the message name, in which case the listener
    *    will be added as a strong referred one by default.
+   *
+   * @param {nsIMessageListenerManager} aMessageManager - is an optional message
+   *     manager that defaults to child process message manager.
    */
   initDOMRequestHelper: function(aWindow, aMessages, aMessageManager) {
     // Query our required interfaces to force a fast fail if they are not

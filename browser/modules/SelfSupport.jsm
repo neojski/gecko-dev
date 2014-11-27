@@ -7,9 +7,15 @@
 this.EXPORTED_SYMBOLS = ["SelfSupport"];
 
 const Cu = Components.utils;
+const BOTTOM_NOTIFICATION_BOX = "global-notificationbox";
+const TOP_NOTIFICATION_BOX = "high-priority-global-notificationbox";
 
-this.SelfSupport = function SelfSupport(aWindow) {
-  this._window = aWindow;
+/**
+ * @params {ChromeWindow} browserWindow - a browser window that will be used to
+ *                                        show the notification.
+ */
+this.SelfSupport = function SelfSupport(browserWindow) {
+  this._window = browserWindow;
   this._window.messageManager.addMessageListener("SelfSupport", this);
 };
 
@@ -29,9 +35,6 @@ this.SelfSupport.prototype = {
   },
 
   handleShowNotification: function(aMessage) {
-    const BOTTOM_NOTIFICATION_BOX = "global-notificationbox";
-    const TOP_NOTIFICATION_BOX = "high-priority-global-notificationbox";
-
     let mm = aMessage.target.messageManager;
     let data = aMessage.data;
     let args = data.args;
@@ -53,7 +56,7 @@ this.SelfSupport.prototype = {
       }
     }
 
-    let buttons = args.buttons.map((button) => {
+    let buttons = args.buttons.map(button => {
       return {
         label: button.label,
         id: button.id,

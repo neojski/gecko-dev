@@ -16,7 +16,6 @@ enum NotificationPriority {
 
 enum NotificationIcon {
   "default",
-  "addon",
 };
 
 /**
@@ -63,8 +62,8 @@ interface MozSelfSupport
    * @param message Message show on the notification bar.
    * @param priority
    * @param buttons List of buttons shown on the notification bar.
-   * @param icon Icon for the notification bar. Currently this argument is ignored.
-   *             and the default icon (depending on the priority) will be shown.
+   * @param icon Icon for the notification bar. Defaults to "default" that will choose
+   *             the icon depending on the priority.
    * @return Promise<String>
    *         Resolved with the clicked button ID.
    *         Rejected when the notification is canceled without clicking a button.

@@ -199,5 +199,4 @@ add_self_support_task(function* test_notification_button(selfSupport) {
   let value = yield promise;
 
   Assert.equal(value, BUTTON_SPEC.id, "Reason: notification removed.");
-  yield selfSupport.closeNotification(notification);
 });
