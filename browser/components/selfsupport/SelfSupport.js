@@ -8,13 +8,12 @@ Components.utils.import("resource://gre/modules/DOMRequestHelper.jsm");
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 const NOTIFICATION_PRIORITIES = {
-  critical: 8, // PRIORITY_CRITICAL_MEDIUM
   info: 2, // PRIORITY_INFO_MEDIUM
   warning: 5, // PRIORITY_WARNING_MEDIUM
+  critical: 8, // PRIORITY_CRITICAL_MEDIUM
 };
 const NOTIFICATION_VALUE = "self-support"; // Value to be used with getNotificationWithValue.
 
-Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const policy = Cc["@mozilla.org/datareporting/service;1"]
@@ -42,19 +41,13 @@ MozSelfSupportInterface.prototype = {
                                          Ci.nsIObserver,
                                          Ci.nsISupportsWeakReference]),
 
-  _mm: null,
-
   init: function (aWindow) {
-    this._mm = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+    let mm = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                      .getInterface(Ci.nsIDocShell)
                      .QueryInterface(Ci.nsIInterfaceRequestor)
                      .getInterface(Ci.nsIContentFrameMessageManager);
 
-    this.initDOMRequestHelper(aWindow, ["SelfSupport"], this._mm);
-
-    let util = this._window.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindowUtils);
-    this.innerWindowID = util.currentInnerWindowID;
+    this.initDOMRequestHelper(aWindow, ["SelfSupport"], mm);
   },
 
   get healthReportDataSubmissionEnabled() {
@@ -90,8 +83,7 @@ MozSelfSupportInterface.prototype = {
     let data = aMessage.data;
     let args = data.args;
     let requestId = data.requestId;
-    let resolver = this.getPromiseResolver(requestId);
-    this.removePromiseResolver(requestId);
+    let resolver = this.takePromiseResolver(requestId);
 
     switch (args.type) {
       case "resolve":

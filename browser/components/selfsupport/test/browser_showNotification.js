@@ -25,20 +25,8 @@ function waitForMutation(node, check) {
   return deferred.promise;
 }
 
-function _closeNotification(notification) {
-  let promise = waitForMutation(notification.parentNode, (mutation) => {
-    for (let i = 0; i < mutation.removedNodes.length; i++) {
-      let node = mutation.removedNodes.item(i);
-      return node == notification;
-    }
-  });
-  info("About to call notification.close.");
-  notification.close();
-  return promise;
-}
-
 function getButtonByLabel(notification, label) {
-  return notification.querySelector("[label=\"" + label + "\"]");
+  return notification.querySelector(`[label="${label}"]`);
 }
 
 function waitForLoad(browser) {
@@ -57,7 +45,7 @@ let prepare = Task.async(function* prepare() {
 
   yield waitForLoad(browser);
 
-  browser.messageManager.addMessageListener("showNotificationResponse", (aMessage) => {
+  browser.messageManager.addMessageListener("showNotificationResponse", aMessage => {
     let data = aMessage.data;
     let type = data.type;
     let deferred = deferreds[data.id];
@@ -83,19 +71,19 @@ let prepare = Task.async(function* prepare() {
       dump("INFO(content) " + msg + "\n");
     }
     info("Content loaded frame script.");
-    addMessageListener("showNotification", (aMessage) => {
+    addMessageListener("showNotification", aMessage => {
       info("Content got showNotification request.");
       let data = aMessage.data;
       let args = data.args;
       let promise = content.MozSelfSupport.showNotification(...args);
-      promise.then((value) => {
+      promise.then(value => {
         info("showNotification resolved. Sending response from content.");
         sendAsyncMessage("showNotificationResponse", {
           id: data.id,
           type: "resolved",
           value: value,
         });
-      }, (reason) => {
+      }, reason => {
         info("showNotification rejected. Sending response from content.");
         sendAsyncMessage("showNotificationResponse", {
           id: data.id,
@@ -122,7 +110,7 @@ let prepare = Task.async(function* prepare() {
         let randomTimeout = new Promise(resolve => setTimeout(resolve, 1000));
         yield randomTimeout;
 
-        let notificationAddedPromise = waitForMutation(notificationBox, (mutation) => {
+        let notificationAddedPromise = waitForMutation(notificationBox, mutation => {
           return mutation.addedNodes.length > 0;
         });
 
@@ -140,9 +128,22 @@ let prepare = Task.async(function* prepare() {
           promise: actionDeferred.promise,
         };
       }),
-      closeNotification: _closeNotification,
+      closeNotification: function (notification) {
+        let promise = waitForMutation(notification.parentNode, mutation => {
+          for (let i = 0; i < mutation.removedNodes.length; i++) {
+            let node = mutation.removedNodes.item(i);
+            if (node == notification) {
+              return true;
+            }
+          }
+          return false;
+        });
+        info("About to call notification.close.");
+        notification.close();
+        return promise;
+      },
     },
-    tab: tab
+    tab: tab,
   };
 });
 
@@ -192,6 +193,7 @@ add_self_support_task(function* test_notification_button(selfSupport) {
   let {notification, promise} = yield selfSupport.showNotification(LABEL, PRIORITY, [BUTTON_SPEC], IMAGE);
 
   let button1 = getButtonByLabel(notification, BUTTON_SPEC.label);
+  Assert.ok(button1, "Button exists.");
   button1.click();
 
   let value = yield promise;

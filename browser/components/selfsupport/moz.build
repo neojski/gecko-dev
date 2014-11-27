@@ -10,5 +10,5 @@ EXTRA_COMPONENTS += [
 ]
 
 BROWSER_CHROME_MANIFESTS += [
-    'test/browser.ini'
+    'test/browser.ini',
 ]
