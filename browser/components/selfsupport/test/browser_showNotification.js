@@ -2,13 +2,25 @@ Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 
 const LABEL = "test label";
-const IMAGE = "addon";
 const PRIORITY = "warning";
 const BUTTON_SPEC = {
   id: "button id",
   label: "button label"
 };
 const PROXY_URL = "chrome://mochitests/content/browser/browser/components/selfsupport/test/self_support_proxy.html";
+
+function assertPromiseRejected(promise, msg) {
+  return new Promise((resolve, reject) => {
+    let rejected = false;
+    promise.then(value => {
+      Assert.ok(false, msg);
+      reject("Promise shouldn't resolve but resolved with: " + value);
+    }, reason => {
+      Assert.ok(true, msg);
+      resolve(reason);
+    });
+  });
+}
 
 function waitForMutation(node, check) {
   let deferred = Promise.defer();
@@ -107,9 +119,6 @@ let prepare = Task.async(function* prepare() {
         let actionDeferred = Promise.defer();
         deferreds[id] = actionDeferred;
 
-        let randomTimeout = new Promise(resolve => setTimeout(resolve, 1000));
-        yield randomTimeout;
-
         let notificationAddedPromise = waitForMutation(notificationBox, mutation => {
           return mutation.addedNodes.length > 0;
         });
@@ -119,7 +128,9 @@ let prepare = Task.async(function* prepare() {
           id: id,
         });
 
+        info("Wait for notification being added.");
         yield notificationAddedPromise;
+        info("Notification added.")
 
         let notification = notificationBox.getNotificationWithValue("self-support");
         Assert.ok(notification, "Notification is shown.");
@@ -160,29 +171,17 @@ function add_self_support_task(task) {
   });
 }
 
-function assertPromiseRejected(promise, msg) {
-  return new Promise((resolve, reject) => {
-    let rejected = false;
-    promise.then(value => {
-      Assert.ok(false, msg);
-      reject("Promise shouldn't resolve but resolved with: " + value);
-    }, reason => {
-      Assert.ok(true, msg);
-      resolve(reason);
-    });
-  });
-}
-
 add_self_support_task(function* test_basic_notification(selfSupport) {
-  let {notification, promise} = yield selfSupport.showNotification(LABEL, PRIORITY, [], IMAGE);
+  let {notification, promise} = yield selfSupport.showNotification(LABEL, PRIORITY, []);
   Assert.equal(notification.label, LABEL);
+
   yield selfSupport.closeNotification(notification);
 
   yield assertPromiseRejected(promise, "Notification promise should be rejected.");
 });
 
 add_self_support_task(function* test_notification_closed(selfSupport) {
-  let {notification, promise} = yield selfSupport.showNotification(LABEL, PRIORITY, [], IMAGE);
+  let {notification, promise} = yield selfSupport.showNotification(LABEL, PRIORITY, []);
   yield selfSupport.closeNotification(notification);
 
   let reason = yield assertPromiseRejected(promise, "Notification promise should be rejected.");
@@ -190,7 +189,7 @@ add_self_support_task(function* test_notification_closed(selfSupport) {
 });
 
 add_self_support_task(function* test_notification_button(selfSupport) {
-  let {notification, promise} = yield selfSupport.showNotification(LABEL, PRIORITY, [BUTTON_SPEC], IMAGE);
+  let {notification, promise} = yield selfSupport.showNotification(LABEL, PRIORITY, [BUTTON_SPEC]);
 
   let button1 = getButtonByLabel(notification, BUTTON_SPEC.label);
   Assert.ok(button1, "Button exists.");
@@ -199,4 +198,6 @@ add_self_support_task(function* test_notification_button(selfSupport) {
   let value = yield promise;
 
   Assert.equal(value, BUTTON_SPEC.id, "Reason: notification removed.");
+
+  yield selfSupport.closeNotification(notification);
 });
